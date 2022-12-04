@@ -1,4 +1,5 @@
 import { Button, Card } from "react-bootstrap"
+import { useShoppingCart } from "../context/ShoppingCartContext"
 import { formatCurrency } from "../utilities/formatCurrency"
 
 type StoreItemProps = {
@@ -9,7 +10,13 @@ type StoreItemProps = {
 }
 
 export function StoreItem({ id, name, price, imgUrl }: StoreItemProps) {
-    const quantity = 0;
+    const { getItemQuantity,
+        increaseQuantity,
+        decreaseQuantity,
+        removeFromCart
+    } = useShoppingCart();
+
+    const quantity = getItemQuantity(id);
 
     return (
         <Card className="h-100">
@@ -27,7 +34,12 @@ export function StoreItem({ id, name, price, imgUrl }: StoreItemProps) {
                 <div className="mt-auto">
                     {quantity === 0 ?
                         (
-                            <Button className="w-100">+ Add To Cart</Button>
+                            <Button
+                                className="w-100"
+                                onClick={() => increaseQuantity(id)}
+                            >
+                                + Add To Cart
+                            </Button>
                         ) :
                         (
                             <div
@@ -37,15 +49,17 @@ export function StoreItem({ id, name, price, imgUrl }: StoreItemProps) {
                                 <div className="d-flex justify-content-center align-items-center"
                                     style={{ gap: '.5rem' }}
                                 >
-                                    <Button>-</Button>
+                                    <Button onClick={() => decreaseQuantity(id)}>-</Button>
                                     <div>
                                         <span className="fs-3">
                                             {quantity}
                                         </span> in cart
                                     </div>
-                                    <Button>+</Button>
+                                    <Button onClick={() => increaseQuantity(id)}>+</Button>
                                 </div>
-                                <Button variant="danger" size="sm">Remove</Button>
+                                <Button variant="danger" size="sm"
+                                    onClick={() => removeFromCart(id)}>
+                                    Remove</Button>
                             </div>
                         )}
                 </div>
