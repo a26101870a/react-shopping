@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
+import { ShoppingCart } from '../components/ShoppingCart'
 
 type ShoppingCartProviderProps = {
     children: ReactNode
@@ -10,10 +11,14 @@ type CartItem = {
 }
 
 type ShoppingCartContext = {
+    openCart: () => void
+    closeCart: () => void
     getItemQuantity: (id: number) => number
     increaseQuantity: (id: number) => void
     decreaseQuantity: (id: number) => void
     removeFromCart: (id: number) => void
+    cartQuantity: number
+    cartItems: CartItem[]
 }
 
 const ShoppingCartContext = createContext({} as ShoppingCartContext)
@@ -23,17 +28,25 @@ export function useShoppingCart() {
 }
 
 export function ShoppingCartProvider({ children }: ShoppingCartProviderProps) {
-    const [carItems, setCarItems] = useState<CartItem[]>([])
+    const [isOpen, setIsOpen] = useState(false);
+    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+    const cartQuantity = cartItems.reduce(
+        (quantity, item) => item.quantity + quantity,
+        0
+    )
+
+    const openCart = () => setIsOpen(true)
+    const closeCart = () => setIsOpen(false)
 
     function getItemQuantity(id: number) {
-        return carItems.find(item => item.id === id)?.quantity || 0
+        return cartItems.find(item => item.id === id)?.quantity || 0
     }
-
     function increaseQuantity(id: number) {
-        setCarItems(currentItems => {
+        setCartItems(currentItems => {
             /* 判斷商品是否已被加入購物車，
             ** null 代表尚未被加入至購物車中，
-            ** 便加入該商品至 carItems 的陣列裡，
+            ** 便加入該商品至 cartItems 的陣列裡，
             ** 並預設為 1 單位。
             */
             if (currentItems.find(item => item.id === id) == null) {
@@ -49,12 +62,11 @@ export function ShoppingCartProvider({ children }: ShoppingCartProviderProps) {
             }
         })
     }
-
     function decreaseQuantity(id: number) {
-        setCarItems(currentItems => {
+        setCartItems(currentItems => {
             /* 若商品再被刪減數量前的值為1，
             ** 則確定刪減該數量後，
-            ** 便排除該商品於 carItems 的陣列之外。
+            ** 便排除該商品於 cartItems 的陣列之外。
             */
             if (currentItems.find(item => item.id === id)?.quantity === 1) {
                 return currentItems.filter(item => item.id !== id)
@@ -69,9 +81,8 @@ export function ShoppingCartProvider({ children }: ShoppingCartProviderProps) {
             }
         })
     }
-
     function removeFromCart(id: number) {
-        setCarItems(currentItems => {
+        setCartItems(currentItems => {
             return currentItems.filter(item => item.id !== id)
         })
     }
@@ -82,10 +93,15 @@ export function ShoppingCartProvider({ children }: ShoppingCartProviderProps) {
                 getItemQuantity,
                 increaseQuantity,
                 decreaseQuantity,
-                removeFromCart
+                removeFromCart,
+                openCart,
+                closeCart,
+                cartItems,
+                cartQuantity,
             }}
         >
             {children}
+            <ShoppingCart isOpen={isOpen} />
         </ShoppingCartContext.Provider>
     )
 }
